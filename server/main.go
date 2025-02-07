@@ -6,25 +6,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/websocket"
 )
 
-// Configuração do Redis
 var redisClient = redis.NewClient(&redis.Options{
-	Addr: "redis:6379", // Altere para a URL do seu Redis
+	Addr: "redis:6379",
 })
 
-// Mapa de conexões WebSocket
 var clients = make(map[*websocket.Conn]bool)
-var mu sync.Mutex // Para sincronização do mapa
+var mu sync.Mutex
 
-// Canal Redis
 const redisChannel = "chat_channel"
 
-// Handler WebSocket
 func websocketHandler(ws *websocket.Conn) {
 	defer ws.Close()
 	mu.Lock()
@@ -43,18 +40,15 @@ func websocketHandler(ws *websocket.Conn) {
 
 		fmt.Println("Mensagem recebida:", msg)
 
-		// Publica a mensagem no Redis para outras instâncias
 		redisClient.Publish(context.Background(), redisChannel, msg)
 	}
 
-	// Remove o cliente ao desconectar
 	mu.Lock()
 	delete(clients, ws)
 	mu.Unlock()
 	fmt.Println("Cliente removido.")
 }
 
-// Escuta mensagens do Redis e retransmite para os WebSockets conectados
 func redisSubscriber() {
 	pubsub := redisClient.Subscribe(context.Background(), redisChannel)
 	defer pubsub.Close()
@@ -81,17 +75,18 @@ func main() {
 		log.Fatal("Erro ao conectar ao Redis:", err)
 	}
 
-	// Inicia a escuta do Redis
 	go redisSubscriber()
 
-	// Configura o servidor WebSocket
 	http.Handle("/ws", websocket.Handler(websocketHandler))
 
-	// Inicia o servidor
-	port := flag.Int("port", 8080, "Port to run the server on")
-	//port := ":8080"
+	http.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
 
-	// Parse flags
+	fmt.Println(os.Args)
+
+	port := flag.Int("port", 8080, "Port to run the server on")
+
 	flag.Parse()
 
 	fmt.Println("Servidor WebSocket rodando na porta", *port)

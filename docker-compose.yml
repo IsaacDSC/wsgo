@@ -11,8 +11,10 @@ services:
       - PORT=8080
     ports:
       - "8080:8080"
+    depends_on:
+      - redis
     networks:
-      - app-network
+      - wsgo-network
 
   go-app2:
     build:
@@ -24,8 +26,10 @@ services:
       - PORT=8081
     ports:
       - "8081:8081"
+    depends_on:
+      - redis
     networks:
-      - app-network
+      - wsgo-network
 
   redis:
     image: "redis:alpine"
@@ -33,8 +37,22 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - app-network
+      - wsgo-network
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    container_name: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - go-app1
+      - go-app2
+    networks:
+      - wsgo-network
 
 networks:
-  app-network:
+  wsgo-network:
     driver: bridge

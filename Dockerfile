@@ -14,4 +14,4 @@ ARG PORT=8080
 
 EXPOSE ${PORT}
 
-CMD ["./main"]
+CMD sh -c "./main -port=${PORT}"

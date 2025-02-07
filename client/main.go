@@ -11,10 +11,8 @@ import (
 )
 
 func main() {
-	// URL do WebSocket (ajuste conforme necessário)
-	url := "ws://localhost:8081/ws"
+	url := "ws://localhost:80/ws"
 
-	// Conectar ao WebSocket
 	conn, err := websocket.Dial(url, "", "http://localhost/")
 	if err != nil {
 		log.Fatalf("Erro ao conectar: %v", err)
@@ -22,11 +20,9 @@ func main() {
 	defer conn.Close()
 	fmt.Println("Conectado ao servidor WebSocket")
 
-	// Canal para capturar sinais de interrupção (Ctrl+C)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	// Goroutine para receber mensagens do servidor
 	go func() {
 		for {
 			var msg string
@@ -39,7 +35,6 @@ func main() {
 		}
 	}()
 
-	// Loop para enviar mensagens periódicas
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
