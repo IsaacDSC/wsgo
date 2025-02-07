@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  go-app1:
+    build:
+      context: .
+      args:
+        - PORT=8080
+    container_name: go-app1
+    environment:
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  go-app2:
+    build:
+      context: .
+      args:
+        - PORT=8081
+    container_name: go-app2
+    environment:
+      - PORT=8081
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
